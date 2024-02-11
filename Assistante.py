@@ -2,10 +2,12 @@ from tkinter import *
 from tkinter import ttk
 import customtkinter as ctk
 from PIL import Image,ImageTk
+from openpyxl import load_workbook
 import tkinter.messagebox as mb
 import mysql.connector as mc
 import openpyxl as Workbook
 import openpyxl
+
 import pathlib
 
 class Assistante:
@@ -46,40 +48,51 @@ class Assistante:
         self.Tel.place(x=10,y=380)
         
 ##################################
+        
+        self.nom = StringVar()
+        self.prenom = StringVar()
+        self.age = StringVar()
+        self.motif = StringVar()
+        self.jour = StringVar()
+        self.rendez_vous = StringVar()
+        self.montant_ttl = StringVar()
+        self.versement = StringVar()
+        self.reste = StringVar()
+        self.num_de_tel = StringVar()
 
     
 
 
     
 ########################################################
-        self.nom_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12))
+        self.nom_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12), textvariable = self.nom)
         self.nom_entry.configure(justify="center")
         self.nom_entry.place(x=120,y=20)
-        self.prenom_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12))
+        self.prenom_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12), textvariable = self.prenom)
         self.prenom_entry.configure(justify="center")
         self.prenom_entry.place(x=120,y=60)
-        self.age_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12))
+        self.age_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12), textvariable = self.age)
         self.age_entry.configure(justify="center")
         self.age_entry.place(x=120,y=100)
-        self.motif_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12))
+        self.motif_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12), textvariable = self.motif)
         self.motif_entry.configure(justify="center")
         self.motif_entry.place(x=120,y=140)
-        self.jour_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12))
+        self.jour_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12), textvariable = self.jour)
         self.jour_entry.configure(justify="center")
         self.jour_entry.place(x=120,y=180)
-        self.rendez_vous_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12))
+        self.rendez_vous_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12), textvariable = self.rendez_vous)
         self.rendez_vous_entry.configure(justify="center")
         self.rendez_vous_entry.place(x=120,y=220)
-        self.montant_total_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12))
+        self.montant_total_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12), textvariable = self.montant_ttl)
         self.montant_total_entry.configure(justify="center")
         self.montant_total_entry.place(x=120,y=260)
-        self.versement_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12))
+        self.versement_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12), textvariable = self.versement)
         self.versement_entry.configure(justify="center")
         self.versement_entry.place(x=120,y=300)
-        self.reste_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12))
+        self.reste_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12), textvariable =self.reste)
         self.reste_entry.configure(justify="center")
         self.reste_entry.place(x=120,y=340)
-        self.tel_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12))
+        self.tel_entry = ctk.CTkEntry(self.Frameleft, font=('tahoma',12), textvariable =self.num_de_tel)
         self.tel_entry.configure(justify="center")
         self.tel_entry.place(x=120,y=380)
 
@@ -95,10 +108,10 @@ class Assistante:
         # ##################################################################################################
         self.Framerighttop = ctk.CTkFrame(self.Frameright, height=70)
          
-        # self.studentsearch = Entry(self.Framerighttop, fg='#4F4F4F', bg='white', font=('tahoma',12,'bold'), width=130)
-        # self.studentsearch.grid(row = 0, column = 0, sticky='nsew', pady=10, padx=10)
-        # self.buttonsearch = Button(self.Framerighttop, text='Search', command=self.search, fg='white', bg='#6E7B8B', font=('tahoma',12,'bold'), width=10)
-        # self.buttonsearch.grid(row = 0, column = 1, sticky='nsew', pady=10, padx=10)
+        self.studentsearch = Entry(self.Framerighttop, fg='#4F4F4F', bg='white', font=('tahoma',12,'bold'), width=130)
+        self.studentsearch.grid(row = 0, column = 0, sticky='nsew', pady=10, padx=10)
+        self.buttonsearch = Button(self.Framerighttop, text='Search', command=self.search_value, fg='white', bg='#6E7B8B', font=('tahoma',12,'bold'), width=10)
+        self.buttonsearch.grid(row = 0, column = 1, sticky='nsew', pady=10, padx=10)
            
         self.Framerighttop.grid_columnconfigure(0, weight=1)
         self.Framerighttop.grid_columnconfigure(0, weight=1)  
@@ -146,6 +159,9 @@ class Assistante:
         self.table.column("Reste", anchor=W, width=6)
         self.table.column("Num de tel", anchor=W, width=6)
  
+        self.lire()
+        self.table.bind("<ButtonRelease>", self.show)
+
 
     def ajouter(self):
           nom = self.nom_entry.get()
@@ -190,31 +206,80 @@ class Assistante:
           self.reste_entry.delete(0,'end')
           self.tel_entry.delete(0,'end')
 
+          self.lire()
+
+          
 
 
-          # Load the workbook
-workbook = openpyxl.load_workbook("C:\\Users\\pc\\assist_cabinet_dentaire\\Liste_patients.xlsx")
+    def lire(self):
+          
+          workbook = openpyxl.load_workbook("C:\\Users\\pc\\assist_cabinet_dentaire\\Liste_patients.xlsx")
 
-# Select the desired sheet
-sheet = workbook['Sheet1']  # Replace 'Sheet1' with the name of your sheet
+          # Select the desired sheet
+          sheet = workbook['Sheet1']  # Replace 'Sheet1' with the name of your sheet
 
-# Access cell values
-cell_value = sheet['A1'].value  # Replace 'A1' with the desired cell address
+          # Access cell values
+          cell_value = sheet['A1'].value  # Replace 'A1' with the desired cell address
 
-# Iterate over rows
-for row in sheet.iter_rows(min_row=2, values_only=True):
-    print(row)
+  
+          self.table.delete(*self.table.get_children())
 
-# Iterate over columns
-for column in sheet.iter_cols(min_col=1, values_only=True):
-    print(column) 
+          for i in sheet.iter_rows(min_row=2, values_only=True):
+            self.table.insert('','end', iid=i[0], values=i)
+              
+    def show(self,ev): 
+        self.data = self.table.focus()
+        alldata = self.table.item(self.data)
+        print(self.data)
+        val = alldata['values']
+        self.nom.set(val[1])
+        self.prenom.set(val[2])
+        self.age.set(val[3])
+        self.motif.set(val[4])
+        self.jour.set(val[5])
+        self.rendez_vous.set(val[6])
+        self.montant_ttl.set(val[7])
+        self.versement.set(val[8])
+        self.reste.set(val[9])
+        self.num_de_tel.set(val[10])
 
+        
 
+    def reset(self):
+        self.FirstName.delete(0,'end')
+        self.LastName.delete(0,'end')
+        self.Matricule.delete(0,'end')
+        self.Email.delete(0,'end')
+        self.Phone.delete(0,'end')
 
+    def search_value(self):
+      
+            # Charger le classeur Excel
+            wb = load_workbook("C:\\Users\\pc\\assist_cabinet_dentaire\\Liste_patients.xlsx")
 
-             
+            # Sélectionner la feuille de calcul
+            sheet = wb.active
 
+            # Valeur à rechercher
+            search_value = self.studentsearch.get()
 
+            # Effacer les anciens résultats
+            for item in self.table.get_children():
+                self.table.delete(item)
+
+            # Rechercher la valeur dans toutes les colonnes
+            for row in sheet.iter_rows(min_row=1, max_row=sheet.max_row, values_only=True):
+                for col_index, cell_value in enumerate(row, start=1):
+                    if cell_value == search_value:
+                        # Ajouter la ligne complète au Treeview
+                        self.table.insert("", "end", values=(row[0], *row[1:]))
+
+            # Si la valeur n'est pas trouvée
+            if not self.table.get_children():
+                mb.showinfo("Résultat", f"La valeur {search_value} n'a pas été trouvée dans le fichier Excel.")
+  
+        
+                     
 
 
 
