@@ -21,10 +21,39 @@ class Assistante:
         # ctk.set_appearance_mode("system")  # Modes: system (default), light, dark
         # ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
         
+        # Charger l'image
+        image = Image.open("C:\\Users\\pc\\assist_cabinet_dentaire\\images\\Teethcare Health Concept with Dental Care Tools and Dentist Instruments Stock Image - Image of health, dentistry_ 157806363.jpg")
+        photo = ImageTk.PhotoImage(image)
+
+        # Créer un widget Canvas
+        canvas = ctk.CTkCanvas(self.master)
+
+        # Créer un objet Image sur le Canvas
+        canvas.create_image(0, 0, image=photo, anchor="nw")
+
+        # Définir la taille du Canvas
+        canvas.configure(width=100, height=100)
         #=========================university management system=======================================#
    
         self.Frameleft = ctk.CTkFrame(self.master, width=300)
         self.Frameleft.pack(side=LEFT, fill=Y)
+        ################################################################################################
+        # Charger l'image
+        image = Image.open("C:\\Users\\pc\\assist_cabinet_dentaire\\images\\Teethcare Health Concept with Dental Care Tools and Dentist Instruments Stock Image - Image of health, dentistry_ 157806363.jpg")
+        photo = ImageTk.PhotoImage(image)
+        
+        # Créer un widget Canvas
+
+        canvas = ctk.CTkCanvas(self.Frameleft)
+
+        # Créer un objet Image sur le Canvas
+        canvas.create_image(0, 0, image=photo, anchor="nw")
+
+        # Définir la taille du Canvas
+        canvas.configure(width=image.width, height=image.height)
+
+        self.Frameleft.pack(fill="both", expand=True)
+
         #############################################################################################
         self.Nom = ctk.CTkLabel(self.Frameleft,text='Nom', font=('Helvetica',15))
         self.Nom.place(x=10,y=20 )
@@ -99,11 +128,17 @@ class Assistante:
 
         self.buttonAdd=ctk.CTkButton(self.Frameleft,text='Ajouter', command=self.ajouter,  font=('Helvetica',15,'bold'))
         self.buttonAdd.place(x=10,y=450)
+        self.buttonDELETE=ctk.CTkButton(self.Frameleft,text='Supprimer', command=self.delete,  font=('Helvetica',15,'bold'))
+        self.buttonDELETE.place(x=10,y=480)
+        self.buttonUP=ctk.CTkButton(self.Frameleft,text='Mise a jour', command=self.update,  font=('Helvetica',15,'bold'))
+        self.buttonUP.place(x=10,y=510)
+        self.buttonRESET=ctk.CTkButton(self.Frameleft,text='Nettoyer', command=self.netoyer,  font=('Helvetica',15,'bold'))
+        self.buttonRESET.place(x=10,y=540)
 
         #fichier = pathlib.Path("C:\\Users\\pc\\assist_cabinet_dentaire\\Liste_patients.xlsx")
         
         ####################################### RIGHT ####################################################
-        self.Frameright = ctk.CTkFrame(self.master, height=800, fg_color='White')
+        self.Frameright = ctk.CTkFrame(self.master, height=800)
         self.Frameright.pack(fill=BOTH, expand=True)
         # ##################################################################################################
         self.Framerighttop = ctk.CTkFrame(self.Frameright, height=70)
@@ -129,13 +164,13 @@ class Assistante:
         self.scrollbar = Scrollbar(self.frameView, orient = VERTICAL)
         
 
-        self.table = ttk.Treeview(self.frameView, column= ("Nom","Prenom","Age","Motif de consultation","Jour","Rendez-vous","Montant total","Versement","Reste","Num de tel"), show='headings', height=17 , yscrollcommand=self.scrollbar.set)
+        self.table = ttk.Treeview(self.frameView, column= ("ID","Nom","Prenom","Age","Motif de consultation","Jour","Rendez-vous","Montant total","Versement","Reste","Num de tel"), show='headings', height=17 , yscrollcommand=self.scrollbar.set)
         self.scrollbar.pack(side=RIGHT, fill=Y)
         self.scrollbar.config(command=self.table.yview())       
         self.table.pack(fill=BOTH)
          
 
-
+        self.table.heading("ID",text="ID")
         self.table.heading("Nom",text="Nom")
         self.table.heading("Prenom",text="Prenom")
         self.table.heading("Age",text="Age")
@@ -147,7 +182,7 @@ class Assistante:
         self.table.heading("Reste",text="Reste")
         self.table.heading("Num de tel",text="Num de tel")
        
-
+        self.table.column("ID", anchor=W, width=5)
         self.table.column("Nom", anchor=W, width=5)
         self.table.column("Prenom", anchor=W, width=6)
         self.table.column("Age", anchor=W, width=6)
@@ -161,6 +196,12 @@ class Assistante:
  
         self.lire()
         self.table.bind("<ButtonRelease>", self.show)
+
+
+        # self.img = Image.open('C:\\Users\\pc\\assist_cabinet_dentaire\\images\\Teethcare Health Concept with Dental Care Tools and Dentist Instruments Stock Image - Image of health, dentistry_ 157806363.jpg')
+        # self.new_img = ImageTk.PhotoImage(self.img)
+        # self.imgDent = Label(self.Frameright, image=self.new_img)
+        # self.imgDent.pack( padx=10, pady =10)
 
 
     def ajouter(self):
@@ -191,24 +232,10 @@ class Assistante:
               conn.commit()
               conn.close() 
               mb.showinfo('Succes ajoute','Donnees inserees', parent=self.master)
-              self.lire()
-          
-              self.nom_entry.delete(0,'end')
-              self.prenom_entry.delete(0,'end')
-              self.age_entry.delete(0,'end')
-              self.motif_entry.delete(0,'end')
-              self.jour_entry.delete(0,'end')
-              self.rendez_vous_entry.delete(0,'end')
-              self.montant_total_entry.delete(0,'end')
-              self.versement_entry.delete(0,'end')
-              self.reste_entry.delete(0,'end')
-              self.tel_entry.delete(0,'end')
+              self.lire()          
+              self.netoyer()
 
           
-
-          
-
-
     def lire(self):
           
           # Connect to SQLite database
@@ -216,21 +243,29 @@ class Assistante:
           cursor = conn.cursor()
 
           # Fetch data from SQLite
-          cursor.execute("SELECT Nom, Prenom, Age, Motif, Jour, Rendez_vous, Montant_total, Versement, Reste, Num_de_tel FROM Patient")
+          #req = "SELECT Nom, Prenom, Age, Motif, Jour, Rendez_vous, Montant_total, Versement, Reste, Num_de_tel FROM Patient" 
+          cursor.execute("SELECT * FROM Patient")
           data = cursor.fetchall()
 
   
           self.table.delete(*self.table.get_children())
 
+          counter = 1  # Start from 1 or another appropriate value
           for i in data:
-            self.table.insert('','end', iid=i[0], values=i)
-
+            self.table.insert('', 'end', iid=str(counter), values=i)
+            counter += 1
+ 
           conn.close()  
               
     def show(self,ev): 
+        selected_item = self.table.selection()
+    
+        # Extract the unique identifier (e.g., ID)
+        self.row_id = self.table.item(selected_item, "values")[0]
+
         self.data = self.table.focus()
         alldata = self.table.item(self.data)
-        print(self.data)
+        print(self.row_id)
         val = alldata['values']
         self.nom.set(val[0])
         self.prenom.set(val[1])
@@ -245,7 +280,7 @@ class Assistante:
 
         
 
-    def reset(self):
+    def netoyer(self):
         self.nom_entry.delete(0,'end')
         self.prenom_entry.delete(0,'end')
         self.age_entry.delete(0,'end')
@@ -256,6 +291,49 @@ class Assistante:
         self.versement_entry.delete(0,'end')
         self.reste_entry.delete(0,'end')
         self.tel_entry.delete(0,'end')
+
+
+    def delete(self):
+    
+        # Connect to SQLite database
+        conn = sqlite3.connect("data_base.db")
+        cursor = conn.cursor()
+        req = ("delete from patient where ID="+self.row_id)
+        cursor.execute(req)
+        conn.commit()
+        conn.close()
+        mb.showinfo('Supprimer', 'Le patient a été supprimé', parent=self.master)
+        self.lire()
+        self.netoyer() 
+
+    def update(self):
+      
+        nom = self.nom_entry.get()
+        prenom = self.prenom_entry.get()
+        age = self.age_entry.get()
+        motif = self.motif_entry.get()
+        jour = self.jour_entry.get()
+        rendez_vous = self.rendez_vous_entry.get()
+        montant_total = self.montant_total_entry.get()
+        versement = self.versement_entry.get()
+        reste = self.reste_entry.get()
+        tel = self.tel_entry.get()  
+        
+        conn = sqlite3.connect("data_base.db")
+        cursor = conn.cursor()
+
+        if (nom == '' or prenom == '' ) :
+           mb.showerror('Erreur','Veuiller saisir le nom et le prenom', parent=self.master)
+        else :
+              req = "UPDATE Patient set ID=? ,Nom=?, Prenom=?, Age=?, Motif=?, Jour=?, Rendez_vous=?, Montant_total=?, Versement=?, Reste=?, Num_de_tel=? WHERE ID=? "  
+              val = (self.row_id, nom, prenom, age, motif, jour, rendez_vous, montant_total, versement, reste, tel, self.row_id)          
+              cursor.execute(req, val)        
+              conn.commit()
+              conn.close() 
+              mb.showinfo('Mise a jour','Le patient a été mis à jour', parent=self.master)
+              self.lire()          
+              self.netoyer()
+        
 
     def search_value(self):
       
@@ -314,13 +392,9 @@ class Assistante:
             conn.close()
         
 
-    
-                     
-
-
-
 
 if (__name__ == '__main__'):
     window = ctk.CTk()
+    window.iconbitmap('C:\\Users\\pc\\assist_cabinet_dentaire\\images\\download.ico')
     std = Assistante(window)
     mainloop()
