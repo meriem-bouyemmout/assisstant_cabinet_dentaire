@@ -2,13 +2,13 @@ from tkinter import *
 from tkinter import ttk
 import customtkinter as ctk
 from PIL import Image,ImageTk
-from openpyxl import load_workbook
 import tkinter.messagebox as mb
-import mysql.connector as mc
-import openpyxl as Workbook
 import openpyxl
-
+from openpyxl import Workbook
+from openpyxl import load_workbook
 import pathlib
+import sqlite3
+from tkinter import filedialog
 
 class Assistante:
     def __init__(self,mast):
@@ -97,7 +97,7 @@ class Assistante:
         self.tel_entry.place(x=120,y=380)
 
 
-        self.buttonAdd=ctk.CTkButton(self.Frameleft,text='Ajouter', command=self.ajouter,  font=('Helvetica',10,'bold'))
+        self.buttonAdd=ctk.CTkButton(self.Frameleft,text='Ajouter', command=self.ajouter,  font=('Helvetica',15,'bold'))
         self.buttonAdd.place(x=10,y=450)
 
         #fichier = pathlib.Path("C:\\Users\\pc\\assist_cabinet_dentaire\\Liste_patients.xlsx")
@@ -108,9 +108,9 @@ class Assistante:
         # ##################################################################################################
         self.Framerighttop = ctk.CTkFrame(self.Frameright, height=70)
          
-        self.studentsearch = Entry(self.Framerighttop, fg='#4F4F4F', bg='white', font=('tahoma',12,'bold'), width=130)
+        self.studentsearch = ctk.CTkEntry(self.Framerighttop,  font=('Helvetica',18,'bold'), width=10)
         self.studentsearch.grid(row = 0, column = 0, sticky='nsew', pady=10, padx=10)
-        self.buttonsearch = Button(self.Framerighttop, text='Search', command=self.search_value, fg='white', bg='#6E7B8B', font=('tahoma',12,'bold'), width=10)
+        self.buttonsearch = ctk.CTkButton(self.Framerighttop, text='Rechercher', command=self.export_to_excel, font=('Helvetica',15,'bold'), height=35)
         self.buttonsearch.grid(row = 0, column = 1, sticky='nsew', pady=10, padx=10)
            
         self.Framerighttop.grid_columnconfigure(0, weight=1)
@@ -175,82 +175,87 @@ class Assistante:
           reste = self.reste_entry.get()
           tel = self.tel_entry.get()
 
-          fichier = openpyxl.load_workbook("C:\\Users\\pc\\assist_cabinet_dentaire\\Liste_patients.xlsx")
-          sheet = fichier.active
-          sheet.cell(column=1,row=sheet.max_row+1 , value = nom)
-          sheet.cell(column=2,row=sheet.max_row , value = prenom)
-          sheet.cell(column=3,row=sheet.max_row , value = age)
-          sheet.cell(column=4,row=sheet.max_row , value = motif)
-          sheet.cell(column=5,row=sheet.max_row , value = jour)
-          sheet.cell(column=6,row=sheet.max_row , value = rendez_vous)
-          sheet.cell(column=7,row=sheet.max_row , value = montant_total)
-          sheet.cell(column=8,row=sheet.max_row , value = versement)
-          sheet.cell(column=9,row=sheet.max_row , value = reste)
-          sheet.cell(column=10,row=sheet.max_row , value = tel)
+          # Connect to SQLite database
+          conn = sqlite3.connect("data_base.db")
+          cursor = conn.cursor()
+
+          # Fetch data from SQLite
           
 
-          fichier.save("C:\\Users\\pc\\assist_cabinet_dentaire\\Liste_patients.xlsx")  
+          if (nom == '' or prenom == '' ) :
+           mb.showerror('Erreur','Veuiller saisir le nom et le prenom', parent=self.master)
+          else :
+              req = "INSERT INTO Patient(Nom, Prenom, Age, Motif, Jour, Rendez_vous, Montant_total, Versement, Reste, Num_de_tel) values ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"  
+              val = (nom, prenom, age, motif, jour, rendez_vous, montant_total, versement, reste, tel)          
+              cursor.execute(req, val)        
+              conn.commit()
+              conn.close() 
+              mb.showinfo('Succes ajoute','Donnees inserees', parent=self.master)
+              self.lire()
           
-          mb.showinfo('Succes ajoute','Donnees inserees', parent=self.master)
+              self.nom_entry.delete(0,'end')
+              self.prenom_entry.delete(0,'end')
+              self.age_entry.delete(0,'end')
+              self.motif_entry.delete(0,'end')
+              self.jour_entry.delete(0,'end')
+              self.rendez_vous_entry.delete(0,'end')
+              self.montant_total_entry.delete(0,'end')
+              self.versement_entry.delete(0,'end')
+              self.reste_entry.delete(0,'end')
+              self.tel_entry.delete(0,'end')
 
-             
-
-          self.nom_entry.delete(0,'end')
-          self.prenom_entry.delete(0,'end')
-          self.age_entry.delete(0,'end')
-          self.motif_entry.delete(0,'end')
-          self.jour_entry.delete(0,'end')
-          self.rendez_vous_entry.delete(0,'end')
-          self.montant_total_entry.delete(0,'end')
-          self.versement_entry.delete(0,'end')
-          self.reste_entry.delete(0,'end')
-          self.tel_entry.delete(0,'end')
-
-          self.lire()
+          
 
           
 
 
     def lire(self):
           
-          workbook = openpyxl.load_workbook("C:\\Users\\pc\\assist_cabinet_dentaire\\Liste_patients.xlsx")
+          # Connect to SQLite database
+          conn = sqlite3.connect("data_base.db")
+          cursor = conn.cursor()
 
-          # Select the desired sheet
-          sheet = workbook['Sheet1']  # Replace 'Sheet1' with the name of your sheet
-
-          # Access cell values
-          cell_value = sheet['A1'].value  # Replace 'A1' with the desired cell address
+          # Fetch data from SQLite
+          cursor.execute("SELECT Nom, Prenom, Age, Motif, Jour, Rendez_vous, Montant_total, Versement, Reste, Num_de_tel FROM Patient")
+          data = cursor.fetchall()
 
   
           self.table.delete(*self.table.get_children())
 
-          for i in sheet.iter_rows(min_row=2, values_only=True):
+          for i in data:
             self.table.insert('','end', iid=i[0], values=i)
+
+          conn.close()  
               
     def show(self,ev): 
         self.data = self.table.focus()
         alldata = self.table.item(self.data)
         print(self.data)
         val = alldata['values']
-        self.nom.set(val[1])
-        self.prenom.set(val[2])
-        self.age.set(val[3])
-        self.motif.set(val[4])
-        self.jour.set(val[5])
-        self.rendez_vous.set(val[6])
-        self.montant_ttl.set(val[7])
-        self.versement.set(val[8])
-        self.reste.set(val[9])
-        self.num_de_tel.set(val[10])
+        self.nom.set(val[0])
+        self.prenom.set(val[1])
+        self.age.set(val[2])
+        self.motif.set(val[3])
+        self.jour.set(val[4])
+        self.rendez_vous.set(val[5])
+        self.montant_ttl.set(val[6])
+        self.versement.set(val[7])
+        self.reste.set(val[8])
+        self.num_de_tel.set(val[9])
 
         
 
     def reset(self):
-        self.FirstName.delete(0,'end')
-        self.LastName.delete(0,'end')
-        self.Matricule.delete(0,'end')
-        self.Email.delete(0,'end')
-        self.Phone.delete(0,'end')
+        self.nom_entry.delete(0,'end')
+        self.prenom_entry.delete(0,'end')
+        self.age_entry.delete(0,'end')
+        self.motif_entry.delete(0,'end')
+        self.jour_entry.delete(0,'end')
+        self.rendez_vous_entry.delete(0,'end')
+        self.montant_total_entry.delete(0,'end')
+        self.versement_entry.delete(0,'end')
+        self.reste_entry.delete(0,'end')
+        self.tel_entry.delete(0,'end')
 
     def search_value(self):
       
@@ -278,7 +283,38 @@ class Assistante:
             if not self.table.get_children():
                 mb.showinfo("Résultat", f"La valeur {search_value} n'a pas été trouvée dans le fichier Excel.")
   
+    def export_to_excel(self):
         
+            # Connect to SQLite database
+            conn = sqlite3.connect("data_base.db")
+            cursor = conn.cursor()
+
+            # Fetch data from SQLite
+            cursor.execute("SELECT * FROM patient")
+            data = cursor.fetchall()
+
+            # Create a new Excel workbook and sheet
+            wb = Workbook()
+            ws = wb.active
+
+            # Write headers to Excel sheet
+            headers = [description[0] for description in cursor.description]
+            ws.append(headers)
+
+            # Write data to Excel sheet
+            for row in data:
+                ws.append(row)
+
+            # Save Excel file
+            file_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
+            if file_path:
+                wb.save(file_path)
+                mb.showinfo("Export Successful", f"Data exported to {file_path}")
+            
+            conn.close()
+        
+
+    
                      
 
 
