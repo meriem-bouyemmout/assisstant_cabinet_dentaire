@@ -1,14 +1,8 @@
 from tkinter import *
 from tkinter import ttk
 import customtkinter as ctk
-from PIL import Image,ImageTk
 import tkinter.messagebox as mb
-import openpyxl
-from openpyxl import Workbook
-from openpyxl import load_workbook
-import pathlib
 import sqlite3
-import List_Patients as pt
 
 class List_Jour:
     def __init__(self,mast):

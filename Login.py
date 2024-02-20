@@ -2,9 +2,11 @@ from tkinter import *
 from tkinter import ttk
 import customtkinter as ctk
 from PIL import Image,ImageTk
-import mysql.connector as mc
+import sqlite3
 import tkinter.messagebox as mb
 import Accueil as Ac
+import Profiles as Pro
+
 
 
 class Login :
@@ -39,41 +41,42 @@ class Login :
 
     def Login(self):
 
+        conn = sqlite3.connect("data_base.db")
+        cursor = conn.cursor() 
+
+        req = " select * from Connexion where Nom = '"+self.username.get()+"' and Mot_de_passe = '"+self.password.get()+"' "
+        cursor.execute(req)
+        result = cursor.fetchone()
+
+
         if(self.username.get() == 'admin' and self.password.get() == '000' ) :
                 win = Toplevel()
                 win.iconbitmap('C:\\Users\\pc\\assist_cabinet_dentaire\\images\\download.ico')
-                uni = Ac.Accueil(win)
+                uni = Pro.Profiles(win)
                 self.username.delete(0,'end')
                 self.password.delete(0,'end')
+
+
+        else:
+            if (result == None) :
+                mb.showerror('Erreur','nom ou mot de passe invalider')  
            
-           
-   
-   
-   
-        # if(self.username.get() == 'admin' and self.password.get() == '000' ) :
-        #         win = Toplevel()
-        #         win.iconbitmap('C:\\Users\\pc\\Student système managment\\images\\swim_ring_icon_183313.ico')
-        #         uni = admin(win)
-        #         self.username.delete(0,'end')
-        #         self.password.delete(0,'end')   
-        
-        # else:
-        #     if (result == None) :
-        #         mb.showerror('Erreur','Invalaid username and password')  
-        #         self.username.delete(0,'end')
-        #         self.password.delete(0,'end')
             
           
 
-        #     else :         
-        #         win = Toplevel()
-        #         win.iconbitmap('C:\\Users\\pc\\Student système managment\\images\\swim_ring_icon_183313.ico')
-        #         uni = University(win)
-        #         self.username.delete(0,'end')
-        #         self.password.delete(0,'end')   
-        
-        #mydb.commit()
+            else :         
+                win = Toplevel()
+                win.iconbitmap('C:\\Users\\pc\\Student système managment\\images\\swim_ring_icon_183313.ico')
+                uni = Ac.Accueil(win)
+                self.username.delete(0,'end')
+                self.password.delete(0,'end')
 
+        conn.close()                   
+           
+           
+   
+   
+   
 
 
         
